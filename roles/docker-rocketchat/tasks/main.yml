@@ -1,0 +1,51 @@
+---
+
+- name: docker_container | create rocket database
+  docker_container:
+    name: rocketchat-mongo
+    image: mongo:3.2
+    state: started
+    pull: True
+    command: mongod --smallfiles --oplogSize 128 --replSet rs0
+    volumes: 
+    - /docker/rocketchat/mongo_data:/data/db
+    
+- name: docker_container | create database replica
+  docker_container:
+    name: mongo-init-replica
+    image: mongo:3.2
+    state: started
+    links:
+    - rocketchat-mongo
+    command: 'mongo rocketchat-mongo/rocketchat --eval "rs.initiate({ _id: ''rs0'', members: [ { _id: 0, host: ''localhost:27017'' } ]})"'
+
+- name: docker_container | create rocketchat container
+  docker_container:
+    name: rocketchat
+    image: rocketchat/rocket.chat
+    state: started
+    pull: True
+    volumes:
+    - /docker/rocketchat/uploads:/app/uploads
+    links:
+    - rocketchat-mongo
+    env:
+      PORT: 3000
+      ROOT_URL: https://chat.{{ domain }}
+      MONGO_URL: mongodb://rocketchat-mongo:27017/rocketchat
+      MONGO_OPLOG_URL: mongodb://rocketchat-mongo:27017/local
+      # MAIL_URL: smtp://smtp.email
+    labels:
+      traefik.backend: rocketchat
+      traefik.frontend.rule: "Host:chat.{{ domain }}"
+      traefik.enable: "true"
+      traefik.port: "3000"
+
+- name: docker_container | create hubot container
+  docker_container:
+    name: rocketchat-hubot
+    image: rocketchat/hubot-rocketchat
+    state: started
+    pull: True
+  when: rocketchat-hubot is defined
+

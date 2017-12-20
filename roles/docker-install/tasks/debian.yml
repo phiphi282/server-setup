@@ -1,0 +1,47 @@
+---
+
+- name: apt | deinstall old docker
+  apt:
+    name: docker
+    state: absent
+
+- name: apt | deinstall old docker-engine
+  apt:
+    name: docker-engine
+    state: absent
+
+- name: apt | deinstall old docker.io
+  apt:
+    name: docker.io
+    state: absent
+
+- name: apt | update cache
+  apt:
+    update_cache: yes
+
+- name: apt | install needed packages
+  apt:
+    name: apt-transport-https,ca-certificates,curl,gnupg2,software-properties-common
+    state: present
+
+- name: apt_key | add gpg key 
+  apt_key:
+    id: "{{ docker_apt_id }}"
+    keyserver: "{{ docker_apt_url }}"
+    state: present
+
+- name: apt_repository | add docker repository
+  apt_repository:
+    repo: "{{ docker_apt_repository }}"
+    mode: '644'
+    update_cache: yes
+    state: present
+
+- name: apt | install docker
+  apt:
+    name: "{{ docker_apt_package_name}}"
+    state: present
+
+- name: pip | install docker-py
+  pip:
+    name: docker-py

@@ -1,0 +1,21 @@
+---
+
+- name: docker_container | Create gitlab container
+  docker_container:
+    name: gitlab
+    image: gitlab/gitlab-ce
+    state: started
+    pull: True
+    volumes:
+    - /srv/gitlab/config:/etc/gitlab
+    - /srv/gitlab/logs:/var/log/gitlab
+    - /srv/gitlab/data:/var/opt/gitlab
+    labels:
+      traefik.backend: gitlab
+      traefik.frontend.rule: "Host:gitlab.{{ domain }}"
+      traefik.enable: "true"
+      traefik.port: "80"
+#    published_ports:
+#    - 2222:22
+    env:
+       GITLAB_OMNIBUS_CONFIG: "external_url 'https://gitlab.{{ domain }}'"

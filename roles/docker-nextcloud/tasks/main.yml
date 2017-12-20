@@ -1,0 +1,34 @@
+---
+
+- name: template | copy environment 
+  template:
+    src: db.j2
+    dest: /tmp/db.env
+
+- name: docker_container | create postgresql volume
+  docker_container:
+    name: nextcloud-postgresql
+    image: postgres
+    state: started
+    pull: True
+    volumes:
+    - db:/var/lib/postgresql/data
+    env_file: /tmp/db.env
+
+- name: docker_container | create nextcloud container
+  docker_container:
+    name: nextcloud
+    image: nextcloud:apache
+    state: started
+    pull: True
+    volumes:
+    - nextcloud:/var/www/html
+    env_file: /tmp/db.env
+    env:
+      NEXTCLOUD_DATA_DIR: "/data"
+    labels:
+      traefik.backend: nextcloud
+      traefik.frontend.rule: "Host:cloud.{{ domain }}"
+      traefik.enable: "true"
+      traefik.port: "80"
+

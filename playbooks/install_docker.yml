@@ -1,0 +1,11 @@
+---
+
+- hosts: all
+  roles:
+#    - pip-install
+#    - docker-install
+    - docker-traefik
+#     - docker-gitlab
+#     - docker-nextcloud
+#    - docker-sharelatex
+    - docker-rocketchat

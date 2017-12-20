@@ -1,0 +1,66 @@
+---
+
+- name: docker_container | create redis storage
+  docker_container:
+    name: sharelatex-redis
+    image: redis
+    state: started
+    pull: True
+    volumes:
+    - /docker/sharelatex/redis_data:/data
+    exposed_ports:
+    - 6379
+
+- name: docker_container | create mongo database
+  docker_container:
+    name: sharelatex-mongo
+    image: mongo:2.6
+    state: started
+    pull: True
+    volumes:
+    - /docker/sharelatex/mongo_data:/data/db
+    exposed_ports:
+    - 27017
+
+- name: docker_container | create sharelatex container
+  docker_container:
+    name: sharelatex
+    image: sharelatex/sharelatex
+    state: started
+    pull: True
+    privileged: True
+    command: tlmgr install scheme-full
+    volumes: 
+    - /docker/sharelatex/sharelatex_data:/var/lib/sharelatex
+    links:
+    - sharelatex-redis:redis
+    - sharelatex-mongo:mongo
+    env:
+      SHARELATEX_MONGO_URL: mongodb://sharelatex-mongo/sharelatex
+      SHARELATEX_REDIS_HOST: sharelatex-redis
+      SHARELATEX_APP_NAME: Sharelatex
+
+      SHARELATEX_SITE_URL: "https://sharelatex.{{ domain }}"
+      SHARELATEX_BEHIND_PROXY: "true"
+      SHARELATEX_SECURE_COOKIE: "true"
+      # SHARELATEX_NAV_TITLE: Our ShareLaTeX Instance
+      # SHARELATEX_HEADER_IMAGE_URL: http://somewhere.com/mylogo.png
+      # SHARELATEX_ADMIN_EMAIL: support@it.com
+
+      # SHARELATEX_LEFT_FOOTER: '[{"text": "Powered by <a href=\"https://www.sharelatex.com\">ShareLaTeX</a> 2016"},{"text": "Another page I want to link to can be found <a href=\"here\">here</a>"} ]'
+      # SHARELATEX_RIGHT_FOOTER: '[{"text": "Hello I am on the Right"} ]'
+      # SHARELATEX_EMAIL_FROM_ADDRESS: "team@sharelatex.com"
+
+      # SHARELATEX_EMAIL_SMTP_HOST: smtp.mydomain.com
+      # SHARELATEX_EMAIL_SMTP_PORT: 587
+      # SHARELATEX_EMAIL_SMTP_SECURE: false
+      # SHARELATEX_EMAIL_SMTP_USER: 
+      # SHARELATEX_EMAIL_SMTP_PASS: 
+      # SHARELATEX_EMAIL_SMTP_TLS_REJECT_UNAUTH: true
+      # SHARELATEX_EMAIL_SMTP_IGNORE_TLS: false
+      # SHARELATEX_CUSTOM_EMAIL_FOOTER: "<div>This system is run by department x </div>"
+    labels:
+      traefik.backend: sharelatex
+      traefik.frontend.rule: "Host:sharelatex.{{ domain }}"
+      traefik.enable: "true"
+      traefik.port: "80"

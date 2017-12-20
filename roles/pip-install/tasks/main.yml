@@ -1,0 +1,22 @@
+---
+
+- name: command | check if pip is installed
+  command: which pip
+  register: pip_task_installed
+  changed_when: no
+  failed_when: no
+
+# Dont validate certs for now, needs to be fixed
+- name: get_url | download pip installer
+  get_url:
+    url: https://bootstrap.pypa.io/get-pip.py
+    dest: "{{ pip_dir_source }}/get-pip.py"
+    validate_certs: no
+  sudo: yes
+  when: pip_task_installed is defined and pip_task_installed.rc != 0
+
+- name: run installer
+  command: "python {{ pip_dir_source }}/get-pip.py"
+  sudo: yes
+  when: pip_task_installed is defined and pip_task_installed.rc != 0
+        

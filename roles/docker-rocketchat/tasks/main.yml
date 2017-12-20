@@ -47,5 +47,18 @@
     image: rocketchat/hubot-rocketchat
     state: started
     pull: True
-  when: rocketchat-hubot is defined
+    links:
+    - rocketchat
+    env:
+      ROCKETCHAT_URL: rocketchat:3000
+      ROCKETCHAT_ROOM: 'GENERAL'
+      ROCKETCHAT_USER: hubot
+      ROCKETCHAT_PASSWORD: "{{ hubot_password }}"
+      BOT_NAME: Hubot
+      EXTERNAL_SCRIPTS: hubot-help,hubot-9gag,hubot-auth,hubot-bitcoin,hubot-calm-down,hubot-dice,hubot-imdb,hubot-karma,hubot-meme,hubot-shipit
+#      EXTERNAL_SCRIPTS: hubot-pugme, hubot-help
+      HUBOT_AUTH_ADMIN: phillip
+    volumes:
+    - /data/rocketchat/scripts:/home/hubot/scripts
+  when: hubot is defined
 

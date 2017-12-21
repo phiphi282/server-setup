@@ -18,4 +18,4 @@
 #    published_ports:
 #    - 2222:22
     env:
-       GITLAB_OMNIBUS_CONFIG: "external_url 'https://gitlab.{{ domain }}'"
+       GITLAB_OMNIBUS_CONFIG: external_url 'https://gitlab.{{ domain }}';nginx['listen_port'] = 80; nginx['listen_https'] = false; nginx['proxy_set_headers'] = {"X-Forwarded-Proto" => "http", "X-Forwarded-Ssl" => "on"}

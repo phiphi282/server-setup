@@ -60,7 +60,9 @@
     - 993:993
     - 4190:4190
     env:
+      DBHOST: mail-mariadb
       DBPASS: "{{ mail_password }}"
+      REDIS_HOST: mail-redis
       RSPAMD_PASSWORD: "{{ rspamd_password }}"
     volumes:
     - /data/mail/:/var/mail
@@ -73,7 +75,10 @@
     hostname: mail.{{ domain }}
     links:
     - mailserver
+    - mail-mariadb
+    - mail-redis
     env:
+      DBHOST: mail-mariadb
       DBPASS: "{{ mail_password }}"
     labels:
       traefik.backend: mail-admin

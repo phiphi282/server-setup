@@ -1,0 +1,4 @@
+---
+mail_password: password
+mail_root_password: root
+rspamd_password: password

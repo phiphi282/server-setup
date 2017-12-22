@@ -1,0 +1,15 @@
+server:
+  server-count: 1
+  ip4-only: yes
+  hide-version: yes
+  identity: ""
+  zonesdir: "/zones"
+
+remote-control:
+  control-enable: yes
+
+zone:
+  name: {{ domain }}
+  zonefile: db.{{ domain }}.signed
+  notify: {{ secondary_dns_ip }} NOKEY
+  provide-xfr: {{ secondary_dns_ip }} NOKEY

@@ -1,0 +1,39 @@
+$ORIGIN {{ domain }}.
+$TTL 7200
+
+; SOA
+
+@       IN      SOA    ns1.{{ domain }}. hostmaster.{{ domain }}. (
+                                        2016020202 ; Serial
+                                        7200       ; Refresh
+                                        1800       ; Retry
+                                        1209600    ; Expire
+                                        86400 )    ; Minimum
+
+; NAMESERVERS
+
+@                   IN                NS                   ns1.{{ domain }}.
+
+; A RECORDS
+
+@                   IN                A                    IPv4
+hostname            IN                A                    IPv4
+ns1                 IN                A                    IPv4
+
+; CNAME RECORDS
+
+www                 IN                CNAME                hostname
+
+; MAIL RECORDS
+
+mail                IN                A                    SERVER_IPV4
+
+@                   IN                MX          10       mail.{{ domain }}.
+
+@                   IN                TXT                  "v=spf1 a mx ip4:SERVER_IPV4 ~all"
+
+mail._domainkey     IN                TXT                  "v=DKIM1; k=rsa; p=DKIM Public Key"
+
+_dmarc              IN                TXT                  "v=DMARC1; p=reject; rua=mailto:postmaster@{{ domain }}; ruf=mailto:admin@{{ domain }}; fo=0; adkim=s; aspf=s; pct=100; rf=afrf; sp=reject"
+...
+

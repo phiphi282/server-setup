@@ -1,0 +1,98 @@
+---
+
+- name: docker_container | setup redis for mail
+  docker_container:
+    name: mail-redis
+    image: redis:4.0-alpine
+    command: "redis-server --appendonly yes"
+    volumes:
+    - /data/mail/redis/db:/data
+
+- name: docker_container | setup mariadb for mail
+  docker_container:
+    name: mail-mariadb
+    image: mariadb:10.2
+    env:
+      MYSQL_ROOT_PASSWORD: "{{ mail_root_password }}"
+      MYSQL_DATABASE: postfix
+      MYSQL_USER: postfix
+      MYSQL_PASSWORD: "{{ mail_password }}"
+    volumes:
+    - /data/mail/mysql/db:/var/lib/mysql
+
+- name: template | copy zones template
+  template:
+    src: db.domain.tld.j2
+    dest: /data/nsd/db/db.{{ domain }}
+
+- name: template | copy config template
+  template:
+    src: nsd.conf.j2
+    dest: /data/nsd/conf/nsd.conf
+
+- name: docker_container | setup dns server
+  docker_container:
+    name: mail-dns
+    image: hardware/nsd-dnssec
+    published_ports:
+    - 53:53
+    - 53:53/udp
+    volumes:
+    - /data/nsd/conf:/etc/nsd
+    - /data/nsd/zones:/zones
+    - /data/nsd/db:/var/db/nsd
+
+- name: docker_container | setup mail server
+  docker_container:
+    name: mailserver
+    image: hardware/mailserver:1.1-stable
+#    domainname: "{{ domain }}"
+    hostname: mail.{{ domain }}
+    links:
+    - mail-mariadb
+    - mail-redis
+    dns_servers:
+    - mail-dns
+    published_ports:
+    - 25:25
+    - 143:143
+    - 587:587
+    - 993:993
+    - 4190:4190
+    env:
+      DBPASS: "{{ mail_password }}"
+      RSPAMD_PASSWORD: "{{ rspamd_password }}"
+    volumes:
+    - /data/mail/:/var/mail
+
+- name: docker_container | setup administration interface
+  docker_container:
+    name: mail-admin
+    image: hardware/postfixadmin
+#    domainname: "{{ domain }}"
+    hostname: mail.{{ domain }}
+    links:
+    - mailserver
+    env:
+      DBPASS: "{{ mail_password }}"
+    labels:
+      traefik.backend: mail-admin
+      traefik.frontend.rule: "Host:postfixadmin.{{ domain }}"
+      traefik.enable: "true"
+      traefik.port: "8888"
+
+- name: docker_container | setup rainloop for mail
+  docker_container:
+    name: mail-web
+    image: hardware/rainloop
+    links:
+    - mailserver
+    volumes:
+    - /data/rainloop:/rainloop/data
+    labels:
+      traefik.backend: mail-web
+      traefik.frontend.rule: "Host:mail.{{ domain }}"
+      traefik.enable: "true"
+      traefik.port: "8888"
+
+

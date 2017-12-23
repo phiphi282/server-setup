@@ -22,15 +22,15 @@ ns1                 IN                A                    IPv4
 
 ; CNAME RECORDS
 
-www                 IN                CNAME                hostname
+www                 IN                CNAME                mail
 
 ; MAIL RECORDS
 
-mail                IN                A                    SERVER_IPV4
+mail                IN                A                    {{ ip }}
 
 @                   IN                MX          10       mail.{{ domain }}.
 
-@                   IN                TXT                  "v=spf1 a mx ip4:SERVER_IPV4 ~all"
+@                   IN                TXT                  "v=spf1 a mx ip4:{{ ip }} ~all"
 
 mail._domainkey     IN                TXT                  "v=DKIM1; k=rsa; p=DKIM Public Key"
 

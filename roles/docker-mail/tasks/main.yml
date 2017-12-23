@@ -30,17 +30,17 @@
     src: nsd.conf.j2
     dest: /data/nsd/conf/nsd.conf
 
-- name: docker_container | setup dns server
-  docker_container:
-    name: mail-dns
-    image: hardware/nsd-dnssec
-    published_ports:
-    - 53:53
-    - 53:53/udp
-    volumes:
-    - /data/nsd/conf:/etc/nsd
-    - /data/nsd/zones:/zones
-    - /data/nsd/db:/var/db/nsd
+#- name: docker_container | setup dns server
+#  docker_container:
+#    name: mail-dns
+#    image: hardware/nsd-dnssec
+#    published_ports:
+#    - 53:53
+#    - 53:53/udp
+#    volumes:
+#    - /data/nsd/conf:/etc/nsd
+#    - /data/nsd/zones:/zones
+#    - /data/nsd/db:/var/db/nsd
 
 - name: docker_container | setup mail server
   docker_container:
@@ -51,8 +51,8 @@
     links:
     - mail-mariadb
     - mail-redis
-    dns_servers:
-    - mail-dns
+#    dns_servers:
+#    - mail-dns
     published_ports:
     - 25:25
     - 143:143
@@ -96,7 +96,7 @@
     - /data/rainloop:/rainloop/data
     labels:
       traefik.backend: mail-web
-      traefik.frontend.rule: "Host:mail.{{ domain }}"
+      traefik.frontend.rule: "Host:webmail.{{ domain }},www.webmail.{{ domain }}"
       traefik.enable: "true"
       traefik.port: "8888"
 

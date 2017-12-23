@@ -1,0 +1,13 @@
+---
+
+- name: docker_container | setup mumble server
+  docker_container:
+    name: mumble
+    image: mattikus/murmur
+    state: started
+    pull: True
+    published_ports:
+    - 64738:64738
+    - 64738:64738/udp
+    volumes:
+    - /data/murmur:/data

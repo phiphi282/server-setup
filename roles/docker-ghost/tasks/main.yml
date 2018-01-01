@@ -10,6 +10,6 @@
       url: https://blog.{{ domain }}
     labels:
       traefik.backend: ghost
-      traefik.frontend.rule: "Host:blog.{{ domain }}"
+      traefik.frontend.rule: "Host:blog.{{ domain }},www.blog.{{ domain }}"
       traefik.enable: "true"
       traefik.port: "2368"

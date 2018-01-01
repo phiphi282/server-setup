@@ -45,14 +45,7 @@ onHostRule = true
 caServer = "https://acme-staging.api.letsencrypt.org/directory"
 
 [[acme.domains]]
-main = "gitlab.{{ domain }}"
-sans = ["www.gitlab.{{ domain }}"]
-[[acme.domains]]
-main = "cloud.{{ domain }}"
-sans = ["www.cloud.{{ domain }}"]
-[[acme.domains]]
-main = "sharelatex.{{ domain }}"
-sans = ["www.cloud.{{ domain }}"]
+main = "mail.{{ domain }}"
 
 #caServer = "https://acme-staging.api.letsencrypt.org/directory"
 

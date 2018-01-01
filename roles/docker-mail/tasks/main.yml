@@ -1,71 +1,112 @@
 ---
 
-- name: docker_container | setup redis for mail
-  docker_container:
-    name: mail-redis
-    image: redis:4.0-alpine
-    command: "redis-server --appendonly yes"
-    volumes:
-    - /data/mail/redis/db:/data
-
-- name: docker_container | setup mariadb for mail
-  docker_container:
-    name: mail-mariadb
-    image: mariadb:10.2
-    env:
-      MYSQL_ROOT_PASSWORD: "{{ mail_root_password }}"
-      MYSQL_DATABASE: postfix
-      MYSQL_USER: postfix
-      MYSQL_PASSWORD: "{{ mail_password }}"
-    volumes:
-    - /data/mail/mysql/db:/var/lib/mysql
-
-- name: template | copy zones template
-  template:
-    src: db.domain.tld.j2
-    dest: /data/nsd/db/db.{{ domain }}
-
-- name: template | copy config template
-  template:
-    src: nsd.conf.j2
-    dest: /data/nsd/conf/nsd.conf
-
-#- name: docker_container | setup dns server
+#- name: docker_container | setup redis for mail
 #  docker_container:
-#    name: mail-dns
-#    image: hardware/nsd-dnssec
-#    published_ports:
-#    - 53:53
-#    - 53:53/udp
+#    name: mail-redis
+#    image: redis:4.0-alpine
+#    command: "redis-server --appendonly yes"
 #    volumes:
-#    - /data/nsd/conf:/etc/nsd
-#    - /data/nsd/zones:/zones
-#    - /data/nsd/db:/var/db/nsd
+#    - /data/mail/redis/db:/data
+#
+#- name: docker_container | setup mariadb for mail
+#  docker_container:
+#    name: mail-mariadb
+#    image: mariadb:10.2
+#    env:
+#      MYSQL_ROOT_PASSWORD: "{{ mail_root_password }}"
+#      MYSQL_DATABASE: postfix
+#      MYSQL_USER: postfix
+#      MYSQL_PASSWORD: "{{ mail_password }}"
+#    volumes:
+#    - /data/mail/mysql/db:/var/lib/mysql
+#
+- name: apt | install jq
+  apt:
+    name: jq
+    state: present
 
-- name: docker_container | setup mail server
+- name: get_url | download script to dump certs
+  get_url:
+    url: https://raw.githubusercontent.com/containous/traefik/master/contrib/scripts/dumpcerts.sh
+    dest: ./dumpcerts.sh
+    mode: +x
+
+- name: file | create certs directory
+  file:
+    path: /data/mail/certs
+    state: directory
+
+- name: command | dump certs to folder
+  command: ./dumpcerts.sh /etc/acme/acme.json /data/mail/certs/
+
+- name: docker_container | setup mailserver
   docker_container:
     name: mailserver
-    image: hardware/mailserver:1.1-stable
-#    domainname: "{{ domain }}"
+    image: tvial/docker-mailserver
     hostname: mail.{{ domain }}
-    links:
-    - mail-mariadb
-    - mail-redis
+    published_ports:
+    - "25:25"
+    - "143:143"
+    - "587:587"
+    - "993:993"
+    volumes:
+    - /data/mail/data:/var/mail
+    - /data/mail/state:/var/mail-state
+    - /data/mail/config:/tmp/docker-mailserver/
+    - /data/mail/certs:/certs
+    env:
+      ENABLE_SPAMASSASSIN: 1
+      ENABLE_CLAMAV: 1
+      ENABLE_FAIL2BAN: 1
+      ENABLE_POSTGREY: 1
+      ONE_DIR: 1
+      DMS_DEBUG: 0
+      SSL_TYPE: manual
+      SSL_CERT_PATH: /certs/certs/mail.{{ domain }}.crt
+      SSL_KEY_PATH: /certs/private/mail.{{ domain }}.key
+
+- name: file | create postfix-accounts file
+  file:
+    path: /data/mail/config/postfix-accounts.cf
+    state: touch
+    mode: "u=rw,g=r,o=r"
+
+- name: command | create first user
+  command: docker run --rm -e MAIL_USER={{ mail_user }}@{{ domain }} -e MAIL_PASS={{ mail_pass }} -i tvial/docker-mailserver:latest /bin/sh -c 'echo "$MAIL_USER|$(doveadm pw -s SHA512-CRYPT -u $MAIL_USER -p $MAIL_PASS)"' >> /data/mail/config/postfix-accounts.cf
+
+#- name: template | copy zones template
+#  template:
+#    src: db.domain.tld.j2
+#    dest: /data/nsd/db/db.{{ domain }}
+#
+#- name: template | copy config template
+#  template:
+#    src: nsd.conf.j2
+#    dest: /data/nsd/conf/nsd.conf
+#
+#- name: docker_container | setup mail server
+#  docker_container:
+#    name: mailserver
+#    image: hardware/mailserver:1.1-stable
+#    hostname: mail.{{ domain }}
+#    links:
+#    - mail-mariadb
+#    - mail-redis
 #    dns_servers:
 #    - mail-dns
-    published_ports:
-    - 25:25
-    - 143:143
-    - 587:587
-    - 993:993
-    - 4190:4190
-    env:
-      DBHOST: mail-mariadb
-      DBPASS: "{{ mail_password }}"
-      REDIS_HOST: mail-redis
-      RSPAMD_PASSWORD: "{{ rspamd_password }}"
-    volumes:
-    - /data/mail/:/var/mail
+#    published_ports:
+#    - 25:25
+#    - 143:143
+#    - 587:587
+#    - 993:993
+#    - 4190:4190
+#    env:
+#      DBHOST: mail-mariadb
+#      DBPASS: "{{ mail_password }}"
+#      REDIS_HOST: mail-redis
+#      RSPAMD_PASSWORD: "{{ rspamd_password }}"
+#    volumes:
+#    - /data/mail/:/var/mail
 
 - name: docker_container | setup administration interface
   docker_container:
@@ -75,8 +116,8 @@
     hostname: mail.{{ domain }}
     links:
     - mailserver
-    - mail-mariadb
-    - mail-redis
+#    - mail-mariadb
+#    - mail-redis
     env:
       DBHOST: mail-mariadb
       DBPASS: "{{ mail_password }}"

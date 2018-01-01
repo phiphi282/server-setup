@@ -1,0 +1,19 @@
+---
+
+- name: docker_container | install minecraft server
+  docker_container:
+    name: minecraft
+    image: itzg/minecraft-server
+    state: started
+    pull: true
+    published_ports:
+    - 25565:25565
+    env:
+#      VERSION: "{{ minecraft-version }}"
+      TYPE: "{{ minecraft_type }}"
+      EULA: "TRUE"
+      ALLOW_NETHER: true
+      ENABLE_COMMAND_BLOCKS: true
+      OPS: "{{ minecraft_ops }}"
+    volumes:
+    - /data/minecraft:/data

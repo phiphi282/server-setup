@@ -1,0 +1,27 @@
+---
+
+- name: docker_container | create database for mediawiki
+  docker_container:
+    name: mediawiki-database
+    image: mariadb
+    state: started
+    pull: true
+    env:
+      MYSQL_DATABASE: mediawiki
+      MYSQL_USER: wiki_user
+      MYSQL_PASSWORD: "{{ wiki_db_password }}"
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+
+- name: docker_container | create mediawiki container
+  docker_container:
+    name: mediawiki
+    image: mediawiki
+    state: started
+    pull: true
+    links:
+    - mediawiki-database
+    labels:
+      traefik.backend: mediawiki
+      traefik.frontend.rule: "Host:wiki.{{ domain }}"
+      traefik.enable: "true"
+      traefik.port: "80"

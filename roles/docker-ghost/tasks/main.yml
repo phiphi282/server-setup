@@ -1,0 +1,15 @@
+---
+
+- name: docker_container | setup ghost container
+  docker_container:
+    name: ghost
+    image: ghost
+    state: started
+    pull: True
+    env:
+      url: https://blog.{{ domain }}
+    labels:
+      traefik.backend: ghost
+      traefik.frontend.rule: "Host:blog.{{ domain }}"
+      traefik.enable: "true"
+      traefik.port: "2368"

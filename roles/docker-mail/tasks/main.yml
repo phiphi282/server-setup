@@ -64,6 +64,8 @@
       SSL_TYPE: manual
       SSL_CERT_PATH: /certs/certs/mail.{{ domain }}.crt
       SSL_KEY_PATH: /certs/private/mail.{{ domain }}.key
+    capabilities:
+    - NET_ADMIN
 
 - name: file | create postfix-accounts file
   file:

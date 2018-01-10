@@ -29,7 +29,7 @@
     state: started
     pull: True
     privileged: True
-    command: tlmgr install scheme-full
+#    command: tlmgr install scheme-full
     volumes: 
     - /docker/sharelatex/sharelatex_data:/var/lib/sharelatex
     links:
@@ -67,4 +67,11 @@
       traefik.port: "80"
 
 - name: command | update sharelatex
-  command: docker exec -d sharelatex tlmgr update --self
+  command: docker exec sharelatex tlmgr update --self
+
+
+- name: command | restart container
+  command: docker restart sharelatex
+
+- name: command | update sharelatex
+  command: docker exec sharelatex tlmgr install scheme-full

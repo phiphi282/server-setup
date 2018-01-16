@@ -5,6 +5,7 @@
     name: gitlab
     image: gitlab/gitlab-ce
     state: started
+    restart_policy: unless-stopped
     pull: True
     published_ports:
     - "2222:22"

@@ -13,22 +13,12 @@
 - name: docker_container | setup docker to bridge relay
   docker_container:
     name: tor-relay
-#    image: dedimax/docker-tor-relay
     image: chriswayg/tor-server
     state: started
+    restart_policy: unless-stopped
     pull: true
     published_ports:
+    restart: "always"
     - "9001:9001"
     - "9030:9030"
-#    - "9050:9050"
-#    env:
-#      TOR_VER: 0.3.2.8-rc
-#      TOR_SHA: 09ee4578f6189f9ec8444bdfd77da65249787537c5661ce746e52aa6b08a0df7
-#      TORRC: /etc/tor/torrc.middle
-#      TOR_NICKNAME: Dangernoodle
-#     CONTACT_EMAIL: "Phillip <phillip@dangernoodle.de>"
-#      DirPort: 9030
-    volumes:
-#    - /etc/localtime:/etc/localtime
-#   - /data/torrelay:/home/tord/.tor
     - "/data/torrelay/torrc:/etc/tor/torrc"

@@ -5,6 +5,7 @@
     name: rocketchat-mongo
     image: mongo:3.2
     state: started
+    restart_policy: unless-stopped
     pull: True
     command: mongod --smallfiles --oplogSize 128 --replSet rs0
     volumes: 
@@ -15,6 +16,7 @@
     name: mongo-init-replica
     image: mongo:3.2
     state: started
+    restart_policy: unless-stopped
     links:
     - rocketchat-mongo
     command: 'mongo rocketchat-mongo/rocketchat --eval "rs.initiate({ _id: ''rs0'', members: [ { _id: 0, host: ''localhost:27017'' } ]})"'
@@ -24,6 +26,7 @@
     name: rocketchat
     image: rocketchat/rocket.chat
     state: started
+    restart_policy: unless-stopped
     pull: True
     volumes:
     - /docker/rocketchat/uploads:/app/uploads

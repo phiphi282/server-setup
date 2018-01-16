@@ -5,6 +5,7 @@
     name: mediawiki-database
     image: mariadb
     state: started
+    restart_policy: unless-stopped
     pull: true
     env:
       MYSQL_DATABASE: mediawiki
@@ -17,6 +18,7 @@
     name: mediawiki
     image: mediawiki
     state: started
+    restart_policy: unless-stopped
     pull: true
     links:
     - mediawiki-database

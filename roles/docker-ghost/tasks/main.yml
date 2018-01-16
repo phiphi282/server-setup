@@ -5,6 +5,7 @@
     name: ghost
     image: ghost
     state: started
+    restart_policy: unless-stopped
     pull: True
     env:
       url: https://blog.{{ domain }}

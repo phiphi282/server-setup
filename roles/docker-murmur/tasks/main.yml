@@ -5,6 +5,7 @@
     name: mumble
     image: mattikus/murmur
     state: started
+    restart_policy: unless-stopped
     pull: True
     published_ports:
     - 64738:64738

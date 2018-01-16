@@ -10,6 +10,7 @@
     name: nextcloud-postgresql
     image: postgres
     state: started
+    restart_policy: unless-stopped
     pull: True
     volumes:
     - db:/var/lib/postgresql/data
@@ -20,6 +21,7 @@
     name: nextcloud
     image: nextcloud:apache
     state: started
+    restart_policy: unless-stopped
     pull: True
     hostname: nextcloud.{{ domain }}
     volumes:
